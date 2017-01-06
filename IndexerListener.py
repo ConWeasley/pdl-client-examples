@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	product.display(f)
 	props = product.properties
 	# check if moment tensor is Mww
-	if product['type'] == 'moment-tensor':
+	if product.type == 'moment-tensor':
 		f.write('moment-tensor, ')
 		if 'derived-magnitude-type' in props and props['derived-magnitude-type'] == 'Mww':
 			f.write('wphase\n')
