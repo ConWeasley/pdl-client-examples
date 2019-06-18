@@ -5,9 +5,6 @@
 # ExternalNotificationListener.py
 # A python implementation of the ExternalNotificationListener Command Line API.
 #
-# $Id: ExampleListener.py 19968 2013-08-16 21:24:20Z jmfee $
-# $URL: https://ghttrac.cr.usgs.gov/websvn/ProductDistribution/tags/1.8.9/etc/examples/client/bin/ExampleListener.py $
-#
 
 
 import os
@@ -48,7 +45,6 @@ def fixArguments(args):
 	return fixedArgs
 
 
-
 class Product(object):
 	"""
 	This represents a product distribution Product that is received
@@ -75,26 +71,29 @@ class Product(object):
 		self.trackerURL = trackerURL
 		# other arguments provided to script, but not understood by this object
 		self.otherArguments = []
-	
+
 	@staticmethod
 	def getProduct(args=None):
 		try:
 			product = Product()
 			product.parseArguments(args)
 			return product
-		except Exception, e:
+		except Exception as e:
 			#invalid product
 			return None
-	
+
+	def getContentPath(self, path):
+		return os.path.join(self.directory, path)
+
 	def parseArguments(self, args=None):
 		"""
 		Parse ExternalNotificationListener Command Line API arguments.
-		
+
 		When args is None, uses sys.argv[1:].
 		"""
 		args = args or sys.argv[1:]
 		args = fixArguments(args)
-		
+
 		for arg in args:
 			try:
 				if arg.startswith('--source='):
@@ -138,15 +137,15 @@ class Product(object):
 				else:
 					#raise Exception('Unknown argument')
 					self.otherArguments.append(arg)
-			except Exception, e:
+			except Exception as e:
 				sys.stderr.write('Unable to parse argument "%s" (%s)\n' % (arg, e))
 		if not self.isValid():
 			raise Exception('Invalid product')
-	
+
 	def isValid(self):
 		"""
 		Determine whether this product is valid.
-		
+
 		A product is considered valid if it has the following fields
 			source
 			type
@@ -161,38 +160,38 @@ class Product(object):
 				self.status == None :
 					return False
 		return True
-	
+
 	def display(self, stream=None):
 		"""
 		Write a summary of the product to stream.
-		
+
 		When stream is None, writes to sys.stderr.
 		"""
 		stream = stream or sys.stderr
-		stream.write('source=%s\n' % self.source)
-		stream.write('type=%s\n' % self.type)
-		stream.write('code=%s\n' % self.code)
-		stream.write('updateTime=%s\n' % self.updateTime)
-		stream.write('status=%s\n' % self.status)
-		
-		stream.write('properties:\n')
-		for name,value in self.properties.iteritems():
-			stream.write('\t%s = %s\n' % (name, value))
-		
-		stream.write('links:\n')
-		for relation,uris in self.links.iteritems():
-			stream.write('\trelation=%s\n' % relation)
+		print('source=%s' % self.source, file=stream)
+		print('type=%s' % self.type, file=stream)
+		print('code=%s' % self.code, file=stream)
+		print('updateTime=%s' % self.updateTime, file=stream)
+		print('status=%s' % self.status, file=stream)
+
+		print('properties:', file=stream)
+		for name,value in self.properties.items():
+			print('\t%s = %s' % (name, value), file=stream)
+
+		print('links:', file=stream)
+		for relation,uris in self.links.items():
+			print('\trelation=%s' % relation, file=stream)
 			for uri in uris:
-				stream.write('\t\turi=%s\n' % uri)
-		
+				print('\t\turi=%s' % uri, file=stream)
+
 		if self.content:
-			stream.write('inline content (type=%s):\n%s\n' % (self.contentType, self.content))
-		
-		stream.write('file content:\n')
+			print('inline content (type=%s):' % self.contentType, file=stream)
+			print(self.content, file=stream)
+
+		print('file content:', file=stream)
 		files = os.listdir(self.directory)
 		for f in files:
-			stream.write('\t%s\n' % f)
-
+			print('\t%s' % f, file=stream)
 
 
 class IndexerAction(object):
@@ -226,19 +225,19 @@ class IndexerAction(object):
 			indexerAction = IndexerAction()
 			indexerAction.parseArguments(args)
 			return indexerAction
-		except Exception, e:
+		except Exception as e:
 			#invalid indexerAction
 			return None
 
 	def parseArguments(self, args=None):
 		"""
 		Parse ExternalNotificationListener Command Line API arguments.
-		
+
 		When args is None, uses sys.argv[1:].
 		"""
 		args = args or sys.argv[1:]
 		args = fixArguments(args)
-		
+
 		for arg in args:
 			try:
 				if arg.startswith('--action='):
@@ -264,8 +263,8 @@ class IndexerAction(object):
 				else:
 					#raise Exception('Unknown argument')
 					self.otherArguments.append(arg)
-			except Exception, e:
-				sys.stderr.write('Unable to parse argument "%s" (%s)\n' % (arg, e))
+			except Exception as e:
+				print('Unable to parse argument "%s" (%s)\n' % (arg, e), file=sys.stderr)
 		# Parse any product associated with this IndexerAction
 		self.product = Product.getProduct(args)
 		if not self.isValid():
@@ -274,14 +273,13 @@ class IndexerAction(object):
 	def isValid(self):
 		"""
 		Determine whether this IndexerAction is valid.
-		
+
 		An indexer action is considered valid if it has the following fields
 			action
 		"""
 		if self.action == None:
 					return False
 		return True
-
 
 
 class ExternalIndexerListener(object):
@@ -426,14 +424,12 @@ class ExternalIndexerListener(object):
 		pass
 
 
-
 if __name__ == '__main__':
 	logfile = 'log/' + os.path.basename(sys.argv[0]) + '.log'
 	f = open(logfile, 'ab+')
 
-	f.write('# ' + datetime.datetime.now().isoformat() + '\n');
-	f.write('# arguments = ' + ' '.join(sys.argv))
+	print('# ' + datetime.datetime.now().isoformat() + '\n', file=f)
+	print('# arguments = ' + ' '.join(sys.argv), file=f)
 	product = Product.getProduct()
 	product.display(f)
-	f.write('\n')
-
+	print('', file=f)

@@ -16,11 +16,11 @@ from ExampleListener import Product
 if __name__ == '__main__':
 	# write data to a log file
 	logfile = os.path.join('data', os.path.basename(sys.argv[0]) + '.log')
-	f = open(logfile, 'ab+')
+	f = open(logfile, 'a+')
 	# current time
-	f.write('# ' + datetime.datetime.now().isoformat() + '\n');
+	print('# %s' % datetime.datetime.now().isoformat(), file=f)
 	# command line arguments
-	f.write('# arguments = ' + ' '.join(sys.argv))
+	print('# arguments = ' + ' '.join(sys.argv), file=f)
 	# parse command line arguments
 	product = Product.getProduct()
 	# output parsed product
@@ -28,9 +28,13 @@ if __name__ == '__main__':
 	# check if moment tensor is Mww
 	props = product.properties
 	if 'derived-magnitude-type' in props and props['derived-magnitude-type'] == 'Mww':
-		f.write('wphase\n')
+		print('wphase', file=f)
+		# now read quakeml
+		quakeml = product.getContentPath('quakeml.xml')
+		with open(quakeml) as q:
+			data = q.read()
+			print('quakeml content', file=f)
+			print(data, file=f)
 	else:
-		f.write('not wphase\n')
-	# add a blank line
-	f.write('\n')
-
+		print('not wphase', file=f)
+	print('\n', file=f)
